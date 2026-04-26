@@ -67,15 +67,32 @@ class X25:
             gateway_url:  Where the X25 gateway is running.
             api_key:      Optional auth key for the gateway.
         """
-        self.org = org
         self.optimize_for = optimize_for or {"cost": 0.33, "quality": 0.34, "latency": 0.33}
         self.policy = policy or {}
         self.gateway_url = gateway_url.rstrip("/")
         self._headers = {"Content-Type": "application/json"}
         if api_key:
             self._headers["Authorization"] = f"Bearer {api_key}"
+            # Resolve org from key — key is the source of truth for identity
+            self.org = self._resolve_org(fallback=org)
+        else:
+            self.org = org
 
         self._normalize_weights()
+
+    def _resolve_org(self, fallback: str = "default") -> str:
+        """Ask the gateway which org this key belongs to."""
+        try:
+            with httpx.Client(timeout=5.0) as client:
+                resp = client.get(
+                    f"{self.gateway_url}/keys/me",
+                    headers=self._headers,
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("org", fallback)
+        except Exception:
+            pass
+        return fallback
 
     def _normalize_weights(self):
         """Ensure weights sum to 1.0."""

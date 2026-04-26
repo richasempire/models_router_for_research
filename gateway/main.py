@@ -21,7 +21,7 @@ from typing import Optional
 # Make gateway modules importable
 sys.path.insert(0, os.path.dirname(__file__))
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -30,6 +30,7 @@ from dotenv import load_dotenv
 
 from agent import run_routing
 from audit import AuditStore
+from auth import get_auth_store, extract_key_from_header
 
 load_dotenv()
 
@@ -43,6 +44,7 @@ app.add_middleware(
 )
 
 _audit = AuditStore()
+_auth  = get_auth_store()
 
 # ── WebSocket connection manager ───────────────────────────────────────────────
 
@@ -84,6 +86,21 @@ def make_broadcast_fn(loop: asyncio.AbstractEventLoop):
 
 # ── Request / Response schemas ─────────────────────────────────────────────────
 
+# ── Auth schemas ───────────────────────────────────────────────────────────────
+
+class CreateKeyRequest(BaseModel):
+    org: str
+    rate_limit_rpm: int = 0   # 0 = unlimited
+
+
+class CreateKeyResponse(BaseModel):
+    key: str                  # full key — shown once, store it safely
+    org: str
+    message: str
+
+
+# ── Route schemas ──────────────────────────────────────────────────────────────
+
 class RouteRequest(BaseModel):
     prompt: str
     org: str = "default"
@@ -107,21 +124,86 @@ class RouteResponse(BaseModel):
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
+# ── Key management endpoints ───────────────────────────────────────────────────
+
+@app.post("/keys/create", response_model=CreateKeyResponse)
+async def create_key(req: CreateKeyRequest):
+    """
+    Create an API key for an org.
+    The key is shown once — store it in your .env file.
+    """
+    key = _auth.create_key(org=req.org, rate_limit_rpm=req.rate_limit_rpm)
+    return CreateKeyResponse(
+        key=key,
+        org=req.org,
+        message=f"Key created for org '{req.org}'. Store it safely — shown once.",
+    )
+
+
+@app.get("/keys/me")
+async def get_my_org(authorization: Optional[str] = Header(default=None)):
+    """Resolve the org for the calling API key. Used by the SDK at init."""
+    raw_key = extract_key_from_header(authorization)
+    if not raw_key:
+        raise HTTPException(status_code=401, detail="No API key provided")
+    org_key = _auth.validate(raw_key)
+    if not org_key:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return {"org": org_key.org, "call_count": org_key.call_count}
+
+
+@app.get("/keys/list")
+async def list_keys(org: Optional[str] = None):
+    """List all keys (previewed, not full) for an org or all orgs."""
+    return {"keys": _auth.list_keys(org=org)}
+
+
+@app.delete("/keys/{key}")
+async def revoke_key(key: str):
+    """Revoke an API key immediately."""
+    revoked = _auth.revoke_key(key)
+    if not revoked:
+        raise HTTPException(status_code=404, detail="Key not found")
+    return {"revoked": True}
+
+
+# ── Route endpoint ─────────────────────────────────────────────────────────────
+
 @app.post("/route", response_model=RouteResponse)
-async def route(req: RouteRequest):
+async def route(req: RouteRequest, authorization: Optional[str] = Header(default=None)):
     """
     Main routing endpoint. Runs the full LangGraph agentic loop:
     classify → select (LinUCB) → dispatch → judge → escalate? → learn → audit
+
+    Auth (optional — backwards compatible):
+      Authorization: Bearer sk-x25-<key>
+      If a valid key is provided, org is derived from the key.
+      If no key, req.org is used (legacy / dev mode).
     """
+    # Resolve org from key if provided
+    org = req.org
+    raw_key = extract_key_from_header(authorization)
+    if raw_key:
+        org_key = _auth.validate(raw_key)
+        if org_key is None:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+        # Check rate limit
+        allowed, count = _auth.check_rate_limit(org_key.org, org_key.rate_limit_per_min)
+        if not allowed:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Rate limit exceeded: {count} calls in last 60s (limit: {org_key.rate_limit_per_min})",
+            )
+        org = org_key.org  # key wins over req.org
+
     loop = asyncio.get_event_loop()
     broadcast_fn = make_broadcast_fn(loop)
 
-    # Run the agent in a thread pool (it makes synchronous HTTP calls)
     result = await asyncio.get_event_loop().run_in_executor(
         None,
         lambda: run_routing(
             prompt=req.prompt,
-            org=req.org,
+            org=org,
             optimize_for=req.optimize_for,
             policy=req.policy,
             hint=req.hint,
