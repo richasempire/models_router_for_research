@@ -34,6 +34,7 @@ from auth import get_auth_store, extract_key_from_header
 from model_registry import get_registry
 from thompson import get_thompson
 from stages import get_stage_tracker
+from finetune import get_finetune_manager
 
 load_dotenv()
 
@@ -297,6 +298,84 @@ async def submit_feedback(org: str, req: FeedbackRequest,
         "accepted": True,
         "feedback_count": count,
         "message": f"{count} examples stored. Fine-tuning starts at 50 examples (Phase 5).",
+    }
+
+
+@app.post("/improve/{org}")
+async def start_finetune(org: str,
+                         authorization: Optional[str] = Header(default=None)):
+    """
+    Stage 4+ — start a fine-tuning job for this org.
+
+    Prepares training data from audit log, generates Unsloth LoRA script,
+    and runs training if a local GPU is available. Otherwise saves the
+    script and data for Colab execution.
+    """
+    raw_key = extract_key_from_header(authorization)
+    if raw_key:
+        org_key = _auth.validate(raw_key)
+        if org_key:
+            org = org_key.org
+
+    stage = get_stage_tracker().get_status(org)
+    if stage["stage"] < 4:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Fine-tuning available at Stage 4+. You are at Stage {stage['stage']} "
+                   f"({stage['calls_to_next_stage']} calls until Stage 4).",
+        )
+
+    job = get_finetune_manager().start_job(org=org, dry_run=True)
+    return {
+        "job_id":      job.job_id,
+        "status":      job.status,
+        "n_examples":  job.n_examples,
+        "data_path":   job.data_path,
+        "script_path": job.data_path.replace(".jsonl", "_train.py"),
+        "base_model":  job.base_model,
+        "message":     (
+            f"Training data prepared ({job.n_examples} examples). "
+            f"Run the generated script locally (GPU) or upload to Colab."
+        ),
+        "colab_instructions": (
+            "1. Upload data_path JSONL to Colab\n"
+            "2. Run: pip install 'unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git'\n"
+            "3. Run the generated training script\n"
+            "4. POST /improve/{org}/register with the output model path"
+        ),
+    }
+
+
+@app.get("/improve/{org}/status")
+async def finetune_status(org: str):
+    """List all fine-tuning jobs and custom models for an org."""
+    mgr = get_finetune_manager()
+    return {
+        "org":           org,
+        "jobs":          mgr.store.list_jobs(org),
+        "custom_models": mgr.store.list_custom_models(org),
+    }
+
+
+class RegisterModelRequest(BaseModel):
+    job_id:     str
+    model_path: str
+
+
+@app.post("/improve/{org}/register")
+async def register_finetuned_model(org: str, req: RegisterModelRequest):
+    """
+    Called after training completes on Colab or local GPU.
+    Registers the fine-tuned model into the routing pool.
+    """
+    mgr      = get_finetune_manager()
+    model_id = mgr.register_complete_model(
+        org=org, job_id=req.job_id, model_path=req.model_path
+    )
+    return {
+        "model_id": model_id,
+        "message":  f"Model '{model_id}' registered as custom SLM for org '{org}'. "
+                    f"It will now be considered in routing decisions.",
     }
 
 
