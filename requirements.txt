@@ -1,0 +1,38 @@
+# X25 — Autonomous LLM Routing Agent
+# Install everything: pip install -r requirements.txt
+
+# Web framework — runs the gateway server
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+
+# LangGraph — the routing agent's state machine brain
+langgraph>=0.2.60
+langchain-core>=0.3.28
+langchain-openai>=0.3.0
+
+# OpenAI — task classifier + LLM-as-judge + Agents SDK
+openai>=1.76.0
+openai-agents>=0.0.14
+
+# Pydantic — type-safe routing decisions
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+
+# MCP — X25 as a tool in Claude Code / Cursor
+mcp>=1.6.0
+fastapi-mcp>=0.3.0
+
+# HTTP client — calls OpenRouter API
+httpx>=0.28.0
+
+# Data & math — LinUCB bandit
+numpy>=2.0.0
+
+# Database — hash-chained audit store
+aiosqlite>=0.20.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# WebSocket support for live dashboard
+websockets>=14.0

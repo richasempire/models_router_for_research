@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+.env
+.env.*
+*.sqlite3
+*.log
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.egg-info/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
