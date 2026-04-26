@@ -37,7 +37,7 @@ CONTEXT_DIM = 11  # 7 task-type one-hot + log_tokens + cost_w + quality_w + late
 ALPHA = 1.0
 
 # Number of arms = number of cascade tiers
-N_ARMS = 3  # SLM, mid, frontier
+N_ARMS = 3  # SLM, mid, frontier  (free/vlm tracked by registry but not in cascade)
 
 TASK_TYPES = ["code", "reasoning", "summary", "creative",
               "classification", "extraction", "general"]
@@ -191,7 +191,16 @@ class LinUCBRouter:
 
     def get_weights_summary(self) -> list[dict]:
         """Return current learned weights per arm for dashboard display."""
-        labels = ["SLM (Llama 3.2 3B)", "Mid (GPT-4o Mini)", "Frontier (Claude Sonnet)"]
+        try:
+            from model_registry import get_registry
+            registry = get_registry()
+            tiers = registry.get_tiers()
+            labels = [f"{t.tier} ({t.model.id.split('/')[-1]})" for t in tiers]
+        except Exception:
+            labels = ["free", "slm", "mid", "frontier"]
+        labels = labels[:len(self.arms)]  # guard length mismatch
+        while len(labels) < len(self.arms):
+            labels.append(f"tier-{len(labels)}")
         return [
             {
                 "tier": labels[i],

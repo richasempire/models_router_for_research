@@ -1,9 +1,10 @@
 """
 OpenRouter client — X25's connection to 300+ models via one API.
 
-Every routing decision ends here. The model string is the only thing
-that changes between cascade tiers. OpenRouter returns real cost in
-every response, so we never have to estimate it.
+Phase 2: CASCADE_TIERS is gone. Model selection is fully dynamic —
+the ModelRegistry decides which model maps to each tier at runtime.
+The routing agent passes a tier name ("slm", "mid", "frontier", "vlm")
+and this client resolves the live best model for that tier.
 """
 
 from __future__ import annotations
@@ -17,38 +18,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# The three cascade tiers X25 routes across.
-# SLM = small, cheap, fast. Mid = balanced. Frontier = best quality.
-CASCADE_TIERS = [
-    {
-        "tier": "slm",
-        "model": "openai/gpt-4o-mini",
-        "provider": "openai",
-        "label": "GPT-4o Mini (SLM)",
-        "energy_j_per_token": 0.8,
-    },
-    {
-        "tier": "mid",
-        "model": "anthropic/claude-haiku-4-5",
-        "provider": "anthropic",
-        "label": "Claude Haiku 4.5 (mid)",
-        "energy_j_per_token": 1.5,
-    },
-    {
-        "tier": "frontier",
-        "model": "anthropic/claude-sonnet-4-6",
-        "provider": "anthropic",
-        "label": "Claude Sonnet 4.6 (frontier)",
-        "energy_j_per_token": 3.5,
-    },
-]
+MAX_RETRIES  = 3
+RETRY_DELAYS = [1, 3, 8]
 
-MAX_RETRIES = 3
-RETRY_DELAYS = [1, 3, 8]  # seconds between retries on 429
-
-# Grid carbon intensity for US East data centers (gCO2 per kWh)
-# Using static value — in production, pull from Electricity Maps API
+# Grid carbon intensity — US East data centers (gCO2 per kWh)
 GRID_INTENSITY_G_CO2_PER_KWH = 386.0
+
+# Frontier pricing for savings calculation
+# Updated dynamically when registry refreshes, but kept as fallback
+_FRONTIER_INPUT_PER_M  = 3.0
+_FRONTIER_OUTPUT_PER_M = 15.0
 
 
 @dataclass
@@ -59,13 +38,16 @@ class ModelResponse:
     tier: str
     prompt_tokens: int
     completion_tokens: int
-    cost_usd: float          # real cost from OpenRouter
+    cost_usd: float
     latency_ms: float
-    carbon_g_co2: float      # grams of CO2 for this call
+    carbon_g_co2: float
 
 
 class OpenRouterClient:
-    """Calls any model on OpenRouter. Routing = changing the model string."""
+    """
+    Calls any model on OpenRouter by tier name.
+    Model resolution: tier → ModelRegistry → live best model ID.
+    """
 
     BASE_URL = "https://openrouter.ai/api/v1"
 
@@ -77,22 +59,43 @@ class OpenRouterClient:
     def call(
         self,
         prompt: str,
-        tier_index: int = 0,
+        tier: str = "slm",
         system_prompt: Optional[str] = None,
         max_tokens: int = 1024,
+        model_id: Optional[str] = None,   # override — used by Thompson router
     ) -> ModelResponse:
         """
-        Call a model at the given cascade tier index (0=SLM, 1=mid, 2=frontier).
-        Retries up to MAX_RETRIES times on 429 rate-limit errors.
-        Returns a ModelResponse with the text, real cost, and carbon footprint.
+        Call the best model for the given tier (or an explicit model_id).
+        Retries on 429. Returns ModelResponse with real cost from OpenRouter.
         """
-        tier_info = CASCADE_TIERS[tier_index]
+        from model_registry import get_registry
+
+        registry = get_registry()
+
+        # Resolve model
+        if model_id:
+            entry = registry.get_model_by_id(model_id)
+            resolved_tier = entry.tier if entry else tier
+            resolved_id   = model_id
+            energy        = entry.energy_j_per_token if entry else 1.5
+            provider      = model_id.split("/")[0]
+        else:
+            snapshot = registry.get_tier(tier)
+            if not snapshot:
+                raise RuntimeError(f"No models available for tier '{tier}'")
+            entry         = snapshot.model
+            resolved_tier = tier
+            resolved_id   = entry.id
+            energy        = entry.energy_j_per_token
+            provider      = entry.provider
+
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
         last_error = None
+        resp = None
         for attempt in range(MAX_RETRIES):
             start = time.time()
             try:
@@ -106,7 +109,7 @@ class OpenRouterClient:
                             "X-Title": "X25 Routing Agent",
                         },
                         json={
-                            "model": tier_info["model"],
+                            "model": resolved_id,
                             "messages": messages,
                             "max_tokens": max_tokens,
                             "temperature": 0.3,
@@ -114,12 +117,12 @@ class OpenRouterClient:
                     )
                     if resp.status_code == 429:
                         delay = RETRY_DELAYS[min(attempt, len(RETRY_DELAYS) - 1)]
-                        print(f"[x25] 429 rate limit on {tier_info['model']}, retrying in {delay}s...")
+                        print(f"[x25] 429 on {resolved_id}, retrying in {delay}s…")
                         time.sleep(delay)
                         last_error = f"429 after {attempt+1} attempts"
                         continue
                     resp.raise_for_status()
-                    break  # success
+                    break
             except httpx.HTTPStatusError as e:
                 last_error = str(e)
                 if attempt < MAX_RETRIES - 1:
@@ -127,28 +130,27 @@ class OpenRouterClient:
                     continue
                 raise
         else:
-            raise RuntimeError(f"OpenRouter {tier_info['model']} failed after {MAX_RETRIES} retries: {last_error}")
+            raise RuntimeError(
+                f"OpenRouter {resolved_id} failed after {MAX_RETRIES} retries: {last_error}"
+            )
 
         latency_ms = (time.time() - start) * 1000
         data = resp.json()
 
-        text = data["choices"][0]["message"]["content"]
-        usage = data.get("usage", {})
-        prompt_tokens = usage.get("prompt_tokens", 0)
+        text              = data["choices"][0]["message"]["content"]
+        usage             = data.get("usage", {})
+        prompt_tokens     = usage.get("prompt_tokens", 0)
         completion_tokens = usage.get("completion_tokens", 0)
+        cost_usd          = float(usage.get("cost", 0.0))
 
-        # OpenRouter returns cost in USD — real number, not estimate
-        cost_usd = float(usage.get("cost", 0.0))
-
-        # Carbon: tokens × energy_per_token (J) × grid_intensity / 3,600,000
-        energy_joules = completion_tokens * tier_info["energy_j_per_token"]
-        carbon_g_co2 = (energy_joules / 3_600_000) * GRID_INTENSITY_G_CO2_PER_KWH
+        energy_joules = completion_tokens * energy
+        carbon_g_co2  = (energy_joules / 3_600_000) * GRID_INTENSITY_G_CO2_PER_KWH
 
         return ModelResponse(
             text=text,
-            model=tier_info["model"],
-            provider=tier_info["provider"],
-            tier=tier_info["tier"],
+            model=resolved_id,
+            provider=provider,
+            tier=resolved_tier,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
             cost_usd=cost_usd,
@@ -156,11 +158,19 @@ class OpenRouterClient:
             carbon_g_co2=carbon_g_co2,
         )
 
-    @staticmethod
-    def frontier_cost_estimate(prompt_tokens: int, completion_tokens: int) -> float:
+    def frontier_cost_estimate(self, prompt_tokens: int, completion_tokens: int) -> float:
         """
-        Estimate what this call would have cost at the frontier tier.
-        Used to compute savings vs always-frontier baseline.
-        Claude Sonnet 4.6: $3/M input, $15/M output
+        Estimate cost at the current frontier tier.
+        Uses live registry pricing if available, falls back to hardcoded.
         """
-        return (prompt_tokens / 1_000_000 * 3.0) + (completion_tokens / 1_000_000 * 15.0)
+        try:
+            from model_registry import get_registry
+            snapshot = get_registry().get_tier("frontier")
+            if snapshot:
+                inp  = snapshot.model.cost_per_1m_input  / 1_000_000
+                out  = snapshot.model.cost_per_1m_output / 1_000_000
+                return prompt_tokens * inp + completion_tokens * out
+        except Exception:
+            pass
+        return (prompt_tokens / 1_000_000 * _FRONTIER_INPUT_PER_M) + \
+               (completion_tokens / 1_000_000 * _FRONTIER_OUTPUT_PER_M)

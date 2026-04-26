@@ -31,6 +31,7 @@ from dotenv import load_dotenv
 from agent import run_routing
 from audit import AuditStore
 from auth import get_auth_store, extract_key_from_header
+from model_registry import get_registry
 
 load_dotenv()
 
@@ -247,6 +248,32 @@ async def verify_chain():
     """Verify the hash chain is intact — tamper detection."""
     ok, message = _audit.verify_chain()
     return {"intact": ok, "message": message}
+
+
+@app.get("/registry")
+async def registry_summary():
+    """Live model catalog — tiers, best models, candidate counts."""
+    return get_registry().catalog_summary()
+
+
+@app.get("/registry/all")
+async def registry_all():
+    """Full model list with tier assignments."""
+    models = get_registry().all_models()
+    return {
+        "total": len(models),
+        "models": [
+            {
+                "id": m.id,
+                "name": m.name,
+                "tier": m.tier,
+                "cost_per_1m_output": m.cost_per_1m_output,
+                "context_length": m.context_length,
+                "is_vision": m.is_vision,
+            }
+            for m in sorted(models, key=lambda m: m.cost_per_1m_output)
+        ],
+    }
 
 
 @app.get("/health")

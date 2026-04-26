@@ -29,9 +29,10 @@ from langgraph.graph import StateGraph, END
 
 from classifier import classify_task
 from evaluator import evaluate_response
-from openrouter import OpenRouterClient, CASCADE_TIERS
+from openrouter import OpenRouterClient
 from linucb import LinUCBRouter, encode_context, compute_reward
 from audit import AuditStore
+from model_registry import get_registry
 
 
 # ── State ─────────────────────────────────────────────────────────────────────
@@ -147,22 +148,27 @@ def node_select(state: RoutingState) -> dict:
         optimize_for=state["optimize_for"],
     )
 
+    registry = get_registry()
+    tiers    = registry.get_cascade_tiers()
+
     # Skip tiers already tried (cascade escalation)
     tried = set(state.get("tried_arms", []))
+    n_arms = min(len(linucb.arms), len(tiers))
     scores = []
-    for i, arm in enumerate(linucb.arms):
+    for i in range(n_arms):
         if i in tried:
-            scores.append(-999.0)  # exclude tried arms
+            scores.append(-999.0)
         else:
-            scores.append(arm.ucb_score(x))
+            scores.append(linucb.arms[i].ucb_score(x))
 
     selected_arm = int(np.argmax(scores))
-    real_scores = [arm.ucb_score(x) for arm in linucb.arms]
+    real_scores  = [linucb.arms[i].ucb_score(x) for i in range(n_arms)]
 
     _broadcast(state, "select", {
         "scores": [round(s, 4) for s in real_scores],
         "selected_arm": selected_arm,
-        "tiers": [t["label"] for t in CASCADE_TIERS],
+        "tiers": [t.tier for t in tiers[:n_arms]],
+        "models": [t.model.id for t in tiers[:n_arms]],
         "tried": list(tried),
     })
 
@@ -174,19 +180,22 @@ def node_select(state: RoutingState) -> dict:
 
 
 def node_dispatch(state: RoutingState) -> dict:
-    """Call the selected model via OpenRouter."""
-    arm = state["selected_arm"]
-    tried = state.get("tried_arms", [])
+    """Call the selected model via OpenRouter (dynamic tier resolution)."""
+    arm      = state["selected_arm"]
+    tried    = state.get("tried_arms", [])
+    registry = get_registry()
+    tiers    = registry.get_cascade_tiers()
+    tier_obj = tiers[arm] if arm < len(tiers) else tiers[-1]
 
     _broadcast(state, "dispatch", {
-        "tier": CASCADE_TIERS[arm]["tier"],
-        "model": CASCADE_TIERS[arm]["label"],
+        "tier":  tier_obj.tier,
+        "model": tier_obj.model.id,
         "attempt": len(tried) + 1,
     })
 
     response = _openrouter.call(
         prompt=state["prompt"],
-        tier_index=arm,
+        tier=tier_obj.tier,
     )
 
     # Compute what frontier would have cost (for savings calculation)
@@ -313,13 +322,17 @@ def should_escalate(state: RoutingState) -> str:
     """
     tried = state.get("tried_arms", [])
     quality_passed = state.get("quality_passed", True)
-    all_tiers = list(range(len(CASCADE_TIERS)))
+    n_tiers = len(get_registry().get_tiers())
+    all_tiers = list(range(n_tiers))
     remaining = [i for i in all_tiers if i not in tried]
 
     if not quality_passed and remaining:
+        registry  = get_registry()
+        tiers     = registry.get_cascade_tiers()
+        next_tier = tiers[remaining[0]].tier if remaining[0] < len(tiers) else "frontier"
         _broadcast(state, "escalate", {
             "reason": f"quality {state['quality_score']:.2f} < threshold {state['quality_threshold']:.2f}",
-            "next_tier": CASCADE_TIERS[remaining[0]]["label"],
+            "next_tier": next_tier,
         })
         return "escalate"
     return "commit"
