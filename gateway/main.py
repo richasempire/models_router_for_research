@@ -33,6 +33,7 @@ from audit import AuditStore
 from auth import get_auth_store, extract_key_from_header
 from model_registry import get_registry
 from thompson import get_thompson
+from stages import get_stage_tracker
 
 load_dotenv()
 
@@ -249,6 +250,54 @@ async def verify_chain():
     """Verify the hash chain is intact — tamper detection."""
     ok, message = _audit.verify_chain()
     return {"intact": ok, "message": message}
+
+
+@app.get("/stage/{org}")
+async def stage_status(org: str):
+    """Current improvement stage for an org."""
+    return get_stage_tracker().get_status(org)
+
+
+@app.get("/stages/all")
+async def all_stages():
+    """Operator view — all orgs and their stages."""
+    return {"orgs": get_stage_tracker().list_all_orgs()}
+
+
+class FeedbackRequest(BaseModel):
+    prompt: str
+    good_model: str
+
+
+@app.post("/feedback/{org}")
+async def submit_feedback(org: str, req: FeedbackRequest,
+                          authorization: Optional[str] = Header(default=None)):
+    """
+    Stage 3+ — submit a labelled example.
+    Tells X25 which model produced the best response for a given prompt.
+    Used to fine-tune the routing classifier in Phase 5.
+    """
+    raw_key = extract_key_from_header(authorization)
+    if raw_key:
+        org_key = _auth.validate(raw_key)
+        if org_key:
+            org = org_key.org
+
+    tracker = get_stage_tracker()
+    state   = tracker.get_status(org)
+    if state["stage"] < 3:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Feedback available at Stage 3+. You are at Stage {state['stage']} "
+                   f"({state['calls_to_next_stage']} calls until Stage 3).",
+        )
+    tracker.submit_feedback(org=org, prompt=req.prompt, good_model=req.good_model)
+    count = tracker.get_feedback_count(org)
+    return {
+        "accepted": True,
+        "feedback_count": count,
+        "message": f"{count} examples stored. Fine-tuning starts at 50 examples (Phase 5).",
+    }
 
 
 @app.get("/thompson/{org}")
