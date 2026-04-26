@@ -32,6 +32,7 @@ from agent import run_routing
 from audit import AuditStore
 from auth import get_auth_store, extract_key_from_header
 from model_registry import get_registry
+from thompson import get_thompson
 
 load_dotenv()
 
@@ -248,6 +249,21 @@ async def verify_chain():
     """Verify the hash chain is intact — tamper detection."""
     ok, message = _audit.verify_chain()
     return {"intact": ok, "message": message}
+
+
+@app.get("/thompson/{org}")
+async def thompson_state(org: str):
+    """
+    Current Thompson Sampling state for an org.
+    Shows α, β, mean reward, confidence, and uncertainty per tier.
+    Useful for understanding how the router has learned so far.
+    """
+    router = get_thompson(org)
+    return {
+        "org":       org,
+        "algorithm": "thompson_sampling",
+        "arms":      router.get_state_summary(),
+    }
 
 
 @app.get("/registry")

@@ -30,9 +30,11 @@ from langgraph.graph import StateGraph, END
 from classifier import classify_task
 from evaluator import evaluate_response
 from openrouter import OpenRouterClient
-from linucb import LinUCBRouter, encode_context, compute_reward
+from linucb import encode_context, compute_reward
+from thompson import get_thompson
 from audit import AuditStore
 from model_registry import get_registry
+from stages import get_stage_tracker
 
 
 # ── State ─────────────────────────────────────────────────────────────────────
@@ -92,13 +94,6 @@ class RoutingState(TypedDict):
 # ── Shared singletons ──────────────────────────────────────────────────────────
 _openrouter = OpenRouterClient()
 _audit = AuditStore()
-_linucb_cache: dict[str, LinUCBRouter] = {}
-
-
-def _get_linucb(org: str) -> LinUCBRouter:
-    if org not in _linucb_cache:
-        _linucb_cache[org] = LinUCBRouter(org)
-    return _linucb_cache[org]
 
 
 def _broadcast(state: RoutingState, event: str, data: dict):
@@ -138,44 +133,36 @@ def node_classify(state: RoutingState) -> dict:
 
 
 def node_select(state: RoutingState) -> dict:
-    """LinUCB selects the best cascade tier for this context."""
-    import numpy as np
+    """Thompson Sampling selects the best cascade tier."""
+    router   = get_thompson(state["org"])
+    registry = get_registry()
+    tiers    = registry.get_cascade_tiers()
 
-    linucb = _get_linucb(state["org"])
+    tried = set(state.get("tried_arms", []))
+    selected_arm, samples = router.select_arm(tried=tried)
+    mean_scores = router.scores()
+
+    _broadcast(state, "select", {
+        "samples":      [round(s, 4) for s in samples],
+        "mean_scores":  [round(s, 4) for s in mean_scores],
+        "selected_arm": selected_arm,
+        "tiers":        [t.tier for t in tiers],
+        "models":       [t.model.id for t in tiers],
+        "tried":        list(tried),
+        "algorithm":    "thompson_sampling",
+    })
+
+    # Keep context vector for reward calculation (linucb util still used)
     x = encode_context(
         task_type=state["task_type"],
         prompt_tokens=len(state["prompt"].split()),
         optimize_for=state["optimize_for"],
     )
 
-    registry = get_registry()
-    tiers    = registry.get_cascade_tiers()
-
-    # Skip tiers already tried (cascade escalation)
-    tried = set(state.get("tried_arms", []))
-    n_arms = min(len(linucb.arms), len(tiers))
-    scores = []
-    for i in range(n_arms):
-        if i in tried:
-            scores.append(-999.0)
-        else:
-            scores.append(linucb.arms[i].ucb_score(x))
-
-    selected_arm = int(np.argmax(scores))
-    real_scores  = [linucb.arms[i].ucb_score(x) for i in range(n_arms)]
-
-    _broadcast(state, "select", {
-        "scores": [round(s, 4) for s in real_scores],
-        "selected_arm": selected_arm,
-        "tiers": [t.tier for t in tiers[:n_arms]],
-        "models": [t.model.id for t in tiers[:n_arms]],
-        "tried": list(tried),
-    })
-
     return {
         "context_vector": x,
-        "linucb_scores": real_scores,
-        "selected_arm": selected_arm,
+        "linucb_scores": samples,   # field reused — now holds TS samples
+        "selected_arm":  selected_arm,
     }
 
 
@@ -245,9 +232,8 @@ def node_judge(state: RoutingState) -> dict:
 
 
 def node_learn(state: RoutingState) -> dict:
-    """Update LinUCB with observed reward (BaRP partial-feedback)."""
-    linucb = _get_linucb(state["org"])
-    x = state["context_vector"]
+    """Update Thompson Sampling with observed reward (BaRP partial-feedback)."""
+    router = get_thompson(state["org"])
 
     reward = compute_reward(
         quality_score=state["quality_score"],
@@ -257,24 +243,26 @@ def node_learn(state: RoutingState) -> dict:
         frontier_cost=state["frontier_cost_usd"],
     )
 
-    # Compute goal match: how well did each dimension perform?
-    cost_saving = max(0.0, (state["frontier_cost_usd"] - state["cost_usd"])
-                      / max(state["frontier_cost_usd"], 1e-9))
+    cost_saving   = max(0.0, (state["frontier_cost_usd"] - state["cost_usd"])
+                        / max(state["frontier_cost_usd"], 1e-9))
     latency_score = max(0.0, 1.0 - state["latency_ms"] / 10_000.0)
     goal_match = {
-        "quality": round(state["quality_score"], 3),
-        "cost": round(cost_saving, 3),
-        "latency": round(latency_score, 3),
+        "quality":        round(state["quality_score"], 3),
+        "cost":           round(cost_saving, 3),
+        "latency":        round(latency_score, 3),
         "overall_reward": round(reward, 3),
     }
 
-    # Only update the arm we actually used (BaRP: partial feedback only)
-    linucb.update(state["selected_arm"], x, reward)
+    # BaRP: only update the arm we dispatched to
+    router.update(state["selected_arm"], reward)
 
+    arm_state = router.get_state_summary()
     _broadcast(state, "learn", {
-        "reward": round(reward, 4),
-        "goal_match": goal_match,
+        "reward":      round(reward, 4),
+        "goal_match":  goal_match,
         "arm_updated": state["selected_arm"],
+        "arm_states":  arm_state,
+        "algorithm":   "thompson_sampling",
     })
 
     return {"reward": reward, "goal_match": goal_match}
@@ -299,12 +287,20 @@ def node_audit(state: RoutingState) -> dict:
         goal_match=state.get("goal_match", {}),
     )
 
+    # Advance stage tracker after every call
+    stage_state = get_stage_tracker().record_call(
+        org=state["org"],
+        quality_score=state["quality_score"],
+    )
+
     _broadcast(state, "audit", {
-        "record_id": record.record_id,
-        "hash": record.record_hash[:16] + "...",
-        "prev_hash": record.prev_hash[:16] + "...",
+        "record_id":  record.record_id,
+        "hash":       record.record_hash[:16] + "...",
+        "prev_hash":  record.prev_hash[:16] + "...",
         "cost_saved": round(record.cost_saved_usd, 6),
-        "carbon_g": round(record.carbon_g_co2, 6),
+        "carbon_g":   round(record.carbon_g_co2, 6),
+        "stage":      stage_state.stage,
+        "stage_name": stage_state.stage.__class__.__name__,
     })
 
     return {"audit_hash": record.record_hash}
@@ -327,12 +323,12 @@ def should_escalate(state: RoutingState) -> str:
     remaining = [i for i in all_tiers if i not in tried]
 
     if not quality_passed and remaining:
-        registry  = get_registry()
-        tiers     = registry.get_cascade_tiers()
+        tiers     = get_registry().get_cascade_tiers()
         next_tier = tiers[remaining[0]].tier if remaining[0] < len(tiers) else "frontier"
         _broadcast(state, "escalate", {
-            "reason": f"quality {state['quality_score']:.2f} < threshold {state['quality_threshold']:.2f}",
+            "reason":    f"quality {state['quality_score']:.2f} < threshold {state['quality_threshold']:.2f}",
             "next_tier": next_tier,
+            "algorithm": "thompson_sampling",
         })
         return "escalate"
     return "commit"
