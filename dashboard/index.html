@@ -5,7 +5,7 @@
 <title>X25 — Routing Dashboard</title>
 <meta name="viewport" content="width=1280">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:      #f6f1e7;
@@ -33,7 +33,6 @@ html, body {
 .stage { width: 100vw; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 24px 0 48px; }
 .page  { width: 1280px; padding: 0 20px; display: flex; flex-direction: column; gap: 16px; }
 
-/* Card */
 .card { background: var(--panel); border: 1px solid var(--hair); border-radius: 12px; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
 .card-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--hair); flex-shrink: 0; }
 .card-title { font-size: 13px; font-weight: 600; color: var(--ink); }
@@ -41,7 +40,6 @@ html, body {
 .card-body { padding: 16px; flex: 1; }
 .card-body.np { padding: 0; }
 
-/* Pill */
 .pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; line-height: 1.5; white-space: nowrap; }
 .pill-n { background: var(--hair-2); color: var(--ink-2); }
 .pill-b { background: var(--chip);   color: var(--brand-2); }
@@ -49,44 +47,46 @@ html, body {
 .pill-w { background: #f5e6c2;       color: #8a5d10; }
 .pill-r { background: #f3d9d2;       color: var(--brand-2); }
 
-/* Dot */
 .dot { display: inline-block; border-radius: 50%; flex-shrink: 0; }
 
 /* Top bar */
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--panel); border: 1px solid var(--hair); border-radius: 12px; box-shadow: var(--shadow); }
 .logo-wrap { display: flex; align-items: center; gap: 14px; }
-.logo-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--brand); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; letter-spacing: -0.3px; }
+.logo-mark { width: 36px; height: 36px; border-radius: 8px; background: var(--brand); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; letter-spacing: -0.3px; }
+.topbar-tagline { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .topbar-right { display: flex; align-items: center; gap: 8px; }
 
-/* KPI strip */
-.kpi-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-.kpi-tile { background: var(--panel); border: 1px solid var(--hair); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
-.kpi-label { font-size: 12px; color: var(--muted); font-weight: 500; }
-.kpi-value { font-size: 24px; font-weight: 700; margin-top: 4px; letter-spacing: -0.4px; }
-.kpi-hint  { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.kpi-hint.g { color: var(--good); }
-.kpi-hint.br { color: var(--brand-2); }
+/* Hero savings strip — the BIG number */
+.savings-hero { background: linear-gradient(135deg, #0d2b0d 0%, #1a3a1a 100%); border-radius: 12px; padding: 28px 32px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 24px; align-items: center; }
+.sh-main { grid-column: span 1; }
+.sh-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; text-transform: uppercase; }
+.sh-value { font-size: 48px; font-weight: 800; color: #7dcc8a; letter-spacing: -1.5px; line-height: 1; margin-top: 6px; }
+.sh-sub   { font-size: 13px; color: rgba(255,255,255,0.45); margin-top: 6px; }
+.sh-stat  { border-left: 1px solid rgba(255,255,255,0.1); padding-left: 24px; }
+.sh-stat .sh-value { font-size: 28px; color: #fff; }
+
+/* Stage banner */
+.stage-banner { border-radius: 12px; padding: 16px 20px; border: 1px solid var(--hair); background: var(--panel); box-shadow: var(--shadow); }
 
 /* 2-col rows */
 .row-2 { display: grid; gap: 16px; }
 .row-2.wide { grid-template-columns: 1.55fr 1fr; }
+.row-2.even { grid-template-columns: 1fr 1fr; }
 
-/* Decision rationale */
+/* Decision panel */
 .rationale { background: linear-gradient(180deg, #f3e6d8 0%, #fbf7ed 100%); border: 1px solid var(--hair); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
 .rationale-label { font-size: 11px; font-weight: 600; color: var(--brand-2); letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 6px; }
 .rationale-text { font-size: 15px; line-height: 1.5; color: var(--ink); }
 .rationale-meta { display: flex; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
 
-/* Candidates table */
+/* Candidate table */
 .cand-table { border: 1px solid var(--hair); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
 .cand-head { display: grid; grid-template-columns: 1.6fr 1fr 90px; gap: 12px; padding: 10px 12px; background: var(--hair-2); font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
-.cand-row { display: grid; grid-template-columns: 1.6fr 1fr 90px; gap: 12px; padding: 12px; align-items: center; border-top: 1px solid var(--hair); }
+.cand-row  { display: grid; grid-template-columns: 1.6fr 1fr 90px; gap: 12px; padding: 12px; align-items: center; border-top: 1px solid var(--hair); }
 .cand-row.picked { background: #fdf8f3; }
 .cand-name { font-size: 13px; font-weight: 500; }
 .cand-name.bold { font-weight: 600; }
-.cand-why { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
 
-/* Score bar */
 .sbar { display: flex; align-items: center; gap: 8px; }
 .sbar-track { flex: 1; height: 6px; background: var(--hair-2); border-radius: 3px; overflow: hidden; }
 .sbar-fill { height: 100%; border-radius: 3px; }
@@ -115,6 +115,18 @@ html, body {
 .goal-marker { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); border-radius: 1px; }
 .goal-legend { display: flex; gap: 12px; margin-top: 6px; font-size: 10px; color: var(--muted); }
 
+/* Thompson state card */
+.ts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.ts-arm { border: 1px solid var(--hair); border-radius: 10px; padding: 14px; background: var(--hair-2); position: relative; overflow: hidden; }
+.ts-arm.active { border-color: var(--brand); background: #fdf4f0; }
+.ts-tier { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.ts-model { font-size: 12px; font-weight: 500; color: var(--ink-2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ts-reward { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-top: 8px; }
+.ts-stats { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: var(--muted); font-family: "JetBrains Mono", monospace; }
+.ts-conf-bar { margin-top: 10px; height: 4px; background: var(--hair); border-radius: 2px; overflow: hidden; }
+.ts-conf-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+.ts-label { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
 /* Model bars */
 .model-bar-row { margin-bottom: 10px; }
 .model-bar-head { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; align-items: center; }
@@ -131,19 +143,65 @@ td { padding: 10px 14px; color: var(--ink-2); }
 td.mono { font-family: "JetBrains Mono", monospace; font-size: 12px; }
 td.td-good { color: var(--good); font-weight: 500; font-family: "JetBrains Mono", monospace; font-size: 12px; }
 td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; font-size: 11px; }
+
+/* Flash animation on new call */
+@keyframes flashNew {
+  0%   { background: #fff7c2; }
+  100% { background: transparent; }
+}
+.flash-new { animation: flashNew 1.2s ease-out; }
 </style>
 </head>
 <body>
 <div class="stage"><div class="page">
 
+<!-- Top bar -->
+<div class="topbar">
+  <div class="logo-wrap">
+    <div class="logo-mark">X25</div>
+    <div>
+      <div style="font-size:15px;font-weight:700;letter-spacing:-0.2px">X25 Routing Agent</div>
+      <div class="topbar-tagline">Picks the cheapest model that gives a good answer — from 300+ options — on every call.</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="pill pill-n" id="ws-pill"><span class="dot" style="width:6px;height:6px;background:var(--warn)"></span>Connecting…</span>
+    <span class="pill pill-n" id="calls-pill">0 calls · live</span>
+  </div>
+</div>
+
+<!-- THE BIG NUMBER — cost savings hero -->
+<div class="savings-hero">
+  <div class="sh-main">
+    <div class="sh-label">Saved vs always-frontier</div>
+    <div class="sh-value" id="hero-saved">$0.00</div>
+    <div class="sh-sub" id="hero-saved-sub">Run demo/live_demo.py to start</div>
+  </div>
+  <div class="sh-stat">
+    <div class="sh-label">Calls routed</div>
+    <div class="sh-value" id="hero-calls">0</div>
+    <div class="sh-sub">total API calls</div>
+  </div>
+  <div class="sh-stat">
+    <div class="sh-label">Avg quality</div>
+    <div class="sh-value" id="hero-quality">—</div>
+    <div class="sh-sub">LLM-as-judge · target ≥ 0.65</div>
+  </div>
+  <div class="sh-stat">
+    <div class="sh-label">CO₂ avoided</div>
+    <div class="sh-value" id="hero-carbon">0 g</div>
+    <div class="sh-sub">vs always-frontier</div>
+  </div>
+</div>
+
 <!-- Stage banner -->
-<div id="stage-banner" style="display:none;border-radius:12px;padding:14px 20px;border:1px solid var(--hair);background:var(--panel);box-shadow:var(--shadow)">
+<div id="stage-banner" class="stage-banner" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <div style="display:flex;align-items:center;gap:14px">
-      <div id="stage-badge" style="width:36px;height:36px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:15px;flex-shrink:0">1</div>
+      <div id="stage-badge" style="width:40px;height:40px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;flex-shrink:0">1</div>
       <div>
-        <div style="font-size:13px;font-weight:600" id="stage-title">Stage 1 — Explore</div>
-        <div style="font-size:12px;color:var(--muted)" id="stage-desc">X25 is learning your task mix.</div>
+        <div style="font-size:14px;font-weight:700" id="stage-title">Stage 1 — Explore</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="stage-desc">X25 is learning your task mix.</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:20px">
@@ -158,60 +216,41 @@ td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; fon
     <div id="stage-progress-bar" style="height:100%;background:var(--brand);border-radius:2px;width:0%;transition:width .4s ease"></div>
   </div>
   <div id="stage-drift-alert" style="display:none;margin-top:10px;padding:8px 12px;background:#f3d9d2;border:1px solid #e8b8b0;border-radius:8px;font-size:12px;color:var(--brand-2)">
-    Quality drift detected — recent quality dropped from baseline. Consider running POST /improve.
+    ⚠ Quality drift detected — recent quality dropped from baseline. Consider running POST /improve.
   </div>
 </div>
 
-<!-- Top bar -->
-<div class="topbar">
-  <div class="logo-wrap">
-    <div class="logo-mark">X25</div>
+<!-- Thompson Sampling — how the router learns -->
+<div class="card">
+  <div class="card-head">
     <div>
-      <div style="font-size:14px;font-weight:600">Routing dashboard</div>
-      <div style="font-size:12px;color:var(--muted)">Autonomous LLM router · MIT CSAIL Hackathon 2026</div>
+      <div class="card-title">How X25 is learning — Thompson Sampling bandit</div>
+      <div class="card-sub">Each call updates the probability that a tier will give a good answer. Cheap tiers tried first. Frontier only when needed.</div>
+    </div>
+    <span class="pill pill-b" id="ts-obs-pill">0 observations</span>
+  </div>
+  <div class="card-body">
+    <div class="ts-grid" id="ts-grid">
+      <!-- filled by JS -->
+      <div class="ts-arm"><div class="ts-tier">SLM</div><div class="ts-model" style="color:var(--muted)">waiting for calls…</div></div>
+      <div class="ts-arm"><div class="ts-tier">Mid</div><div class="ts-model" style="color:var(--muted)">waiting for calls…</div></div>
+      <div class="ts-arm"><div class="ts-tier">Frontier</div><div class="ts-model" style="color:var(--muted)">waiting for calls…</div></div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--hair);font-size:12px;color:var(--muted);line-height:1.6">
+      <b style="color:var(--ink-2)">How to read this:</b>
+      Mean reward = how often this tier passes quality. Confidence = how sure X25 is (grows with observations).
+      As calls accumulate, the cheapest tier that consistently scores well gets picked more.
+      Frontier gets selected only when SLM + mid are both unreliable for your task type.
     </div>
   </div>
-  <div class="topbar-right">
-    <span class="pill pill-n" id="ws-pill"><span class="dot" style="width:6px;height:6px;background:var(--warn)"></span>Connecting…</span>
-    <span class="pill pill-n" id="calls-pill">0 calls · live</span>
-  </div>
 </div>
 
-<!-- KPI strip -->
-<div class="kpi-strip">
-  <div class="kpi-tile">
-    <div class="kpi-label">Calls routed</div>
-    <div class="kpi-value" id="kpi-calls">0</div>
-    <div class="kpi-hint" id="kpi-calls-sub">waiting for first call</div>
-  </div>
-  <div class="kpi-tile">
-    <div class="kpi-label">Saved vs frontier</div>
-    <div class="kpi-value" id="kpi-saved">$0.00</div>
-    <div class="kpi-hint g" id="kpi-saved-sub">—</div>
-  </div>
-  <div class="kpi-tile">
-    <div class="kpi-label">Avg quality</div>
-    <div class="kpi-value" id="kpi-quality">—</div>
-    <div class="kpi-hint">LLM-as-judge · target ≥ 0.65</div>
-  </div>
-  <div class="kpi-tile">
-    <div class="kpi-label">Avg latency</div>
-    <div class="kpi-value" id="kpi-latency">—</div>
-    <div class="kpi-hint">end-to-end ms</div>
-  </div>
-  <div class="kpi-tile">
-    <div class="kpi-label">CO₂ avoided</div>
-    <div class="kpi-value" id="kpi-carbon">0 g</div>
-    <div class="kpi-hint">vs always-frontier</div>
-  </div>
-</div>
-
-<!-- Hero + Outcome -->
+<!-- Why this call + Outcome -->
 <div class="row-2 wide">
   <div class="card">
     <div class="card-head">
       <div>
-        <div class="card-title">Why this model?</div>
+        <div class="card-title">What just happened?</div>
         <div class="card-sub" id="hero-sub">Waiting for a routing call…</div>
       </div>
       <span class="pill pill-b">Latest call</span>
@@ -219,7 +258,7 @@ td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; fon
     <div class="card-body" id="hero-body">
       <div style="color:var(--muted);font-size:13px;padding:24px 0;text-align:center;line-height:2.2">
         Run
-        <span style="font-family:'JetBrains Mono',monospace;background:var(--hair-2);padding:2px 8px;border-radius:4px">demo/research_agent.py</span>
+        <span style="font-family:'JetBrains Mono',monospace;background:var(--hair-2);padding:2px 8px;border-radius:4px">python demo/live_demo.py</span>
         to start routing.<br>The full decision breakdown will appear here.
       </div>
     </div>
@@ -228,8 +267,8 @@ td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; fon
   <div class="card">
     <div class="card-head">
       <div>
-        <div class="card-title">Outcome</div>
-        <div class="card-sub">X25 path vs always-frontier</div>
+        <div class="card-title">This call vs always-frontier</div>
+        <div class="card-sub">What X25 avoided paying</div>
       </div>
     </div>
     <div class="card-body" id="outcome-body">
@@ -238,13 +277,13 @@ td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; fon
   </div>
 </div>
 
-<!-- Savings + Model mix -->
+<!-- Savings chart + Model mix -->
 <div class="row-2 wide">
   <div class="card">
     <div class="card-head">
       <div>
-        <div class="card-title">Cumulative savings vs always-frontier</div>
-        <div class="card-sub" id="savings-sub">Live session</div>
+        <div class="card-title">Cumulative savings — session total</div>
+        <div class="card-sub" id="savings-sub">Every call that didn't need frontier adds here</div>
       </div>
       <span class="pill pill-g" id="savings-pill">$0.00</span>
     </div>
@@ -264,8 +303,8 @@ td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; fon
   <div class="card">
     <div class="card-head">
       <div>
-        <div class="card-title">Model distribution</div>
-        <div class="card-sub">Share of routed calls</div>
+        <div class="card-title">Which tier won each call</div>
+        <div class="card-sub">More SLM = X25 learned your tasks are cheap to handle</div>
       </div>
     </div>
     <div class="card-body">
@@ -279,13 +318,13 @@ td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; fon
 <div class="card">
   <div class="card-head">
     <div>
-      <div class="card-title">Multi-variable performance</div>
-      <div class="card-sub">Quality · Cost efficiency · Latency efficiency — per call, normalized 0→1</div>
+      <div class="card-title">Quality · Cost savings · Latency — per call</div>
+      <div class="card-sub">Quality stays high while cost and latency improve as the router learns your patterns</div>
     </div>
     <div style="display:flex;gap:12px;align-items:center">
       <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--good)"><span style="display:inline-block;width:16px;height:2px;background:var(--good)"></span>Quality</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--blue)"><span style="display:inline-block;width:16px;height:2px;background:var(--blue)"></span>Cost eff.</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--warn)"><span style="display:inline-block;width:16px;height:2px;background:var(--warn)"></span>Latency eff.</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--blue)"><span style="display:inline-block;width:16px;height:2px;background:var(--blue);border-top:2px dashed var(--blue);height:0"></span>Cost eff.</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--warn)"><span style="display:inline-block;width:16px;border-top:2px dashed var(--warn)"></span>Latency eff.</span>
     </div>
   </div>
   <div class="card-body">
@@ -300,7 +339,7 @@ td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; fon
   <div class="card-head">
     <div>
       <div class="card-title">Tamper-evident audit trail</div>
-      <div class="card-sub">Every call hashed and chained · GET /verify</div>
+      <div class="card-sub">Every routing decision hashed and chained — verifiable at GET /verify</div>
     </div>
     <span class="pill pill-g" id="chain-pill"><span class="dot" style="width:6px;height:6px;background:var(--good)"></span>&nbsp;Chain intact</span>
   </div>
@@ -308,8 +347,8 @@ td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; fon
     <table>
       <thead>
         <tr>
-          <th>Record ID</th><th>Task</th><th>Model</th>
-          <th>Quality</th><th>Cost</th><th>Saved</th><th>Latency</th><th>Hash</th>
+          <th>#</th><th>Task</th><th>Model chosen</th>
+          <th>Quality</th><th>Cost paid</th><th>Saved vs frontier</th><th>Latency</th><th>Hash</th>
         </tr>
       </thead>
       <tbody id="audit-body">
@@ -319,69 +358,73 @@ td.td-muted { color: var(--muted); font-family: "JetBrains Mono", monospace; fon
   </div>
 </div>
 
-</div></div><!-- /page /stage -->
+</div></div>
 
 <script>
 var savingsSeries = [];
-var MODEL_COLORS = {
-  'gpt-4o-mini':       '#1c4a8a',
-  'claude-haiku-4-5':  '#2f6b3a',
-  'claude-sonnet-4-6': '#b07a14',
-  'gpt-5':             '#b6321c'
-};
+var TIER_COLORS = { slm: '#1c4a8a', mid: '#b07a14', frontier: '#b6321c' };
+var lastRecordId = null;
+var lastOrg = null;
 
 function mcolor(name) {
-  for (var k in MODEL_COLORS) {
-    if (name && name.indexOf(k) !== -1) return MODEL_COLORS[k];
-  }
+  if (!name) return '#6b6354';
+  var n = name.toLowerCase();
+  if (n.indexOf('deepseek') !== -1) return '#1c4a8a';
+  if (n.indexOf('qwen') !== -1) return '#2f6b3a';
+  if (n.indexOf('llama') !== -1) return '#b07a14';
+  if (n.indexOf('claude') !== -1 || n.indexOf('anthropic') !== -1) return '#b6321c';
+  if (n.indexOf('gpt') !== -1 || n.indexOf('openai') !== -1) return '#2f6b3a';
   return '#6b6354';
 }
 
-// ── WebSocket ───────────────────────────────────────────
+// ── WebSocket ─────────────────────────────────────────────────────────────────
 function connect() {
   var ws = new WebSocket('ws://localhost:8000/ws');
-  ws.onopen  = function() { setWs(true); };
-  ws.onclose = function() { setWs(false); setTimeout(connect, 2000); };
+  ws.onopen    = function() { setWs(true); };
+  ws.onclose   = function() { setWs(false); setTimeout(connect, 2000); };
   ws.onmessage = function(e) {
     var msg = JSON.parse(e.data);
-    if (msg.event === 'audit') { fetchStats(); fetchAudit(); fetchVerify(); }
+    if (msg.event === 'audit') {
+      fetchStats();
+      fetchAudit();
+      fetchVerify();
+      fetchThompson();
+    }
   };
 }
 
 function setWs(ok) {
   var p = document.getElementById('ws-pill');
-  var color = ok ? 'var(--good)' : 'var(--warn)';
-  var label = ok ? 'Live' : 'Reconnecting…';
   p.className = ok ? 'pill pill-g' : 'pill pill-n';
-  p.innerHTML = '<span class="dot" style="width:6px;height:6px;background:' + color + '"></span>' + label;
+  p.innerHTML = '<span class="dot" style="width:6px;height:6px;background:' + (ok ? 'var(--good)' : 'var(--warn)') + '"></span>' + (ok ? 'Live' : 'Reconnecting…');
 }
 
-// ── Stats ───────────────────────────────────────────────
+// ── Stats ─────────────────────────────────────────────────────────────────────
 function fetchStats() {
   fetch('http://localhost:8000/stats/all')
     .then(function(r) { return r.json(); })
     .then(function(s) {
-      var calls   = s.total_calls || 0;
+      var calls   = s.total_calls   || 0;
       var saved   = s.total_saved_usd || 0;
-      var quality = s.avg_quality || 0;
-      var latency = s.avg_latency_ms || 0;
+      var quality = s.avg_quality   || 0;
       var carbon  = s.total_carbon_g || 0;
 
-      document.getElementById('kpi-calls').textContent    = calls;
-      document.getElementById('kpi-calls-sub').textContent = calls ? '+' + Math.min(calls, 18) + ' in last hour' : 'waiting for first call';
-      document.getElementById('kpi-saved').textContent    = saved >= 1 ? '$' + saved.toFixed(2) : '$' + saved.toFixed(4);
-      document.getElementById('kpi-saved-sub').textContent = calls ? '98% below frontier cost' : '—';
-      document.getElementById('kpi-quality').textContent  = calls ? quality.toFixed(2) : '—';
-      document.getElementById('kpi-latency').textContent  = calls ? latency.toFixed(0) + 'ms' : '—';
-      document.getElementById('kpi-carbon').textContent   = carbon < 1 ? carbon.toFixed(3) + ' g' : carbon.toFixed(1) + ' g';
+      document.getElementById('hero-calls').textContent   = calls;
+      document.getElementById('hero-quality').textContent = calls ? quality.toFixed(2) : '—';
+      document.getElementById('hero-carbon').textContent  = carbon < 1 ? carbon.toFixed(3) + ' g' : carbon.toFixed(1) + ' g';
       document.getElementById('calls-pill').textContent   = calls + ' calls · live';
-      document.getElementById('savings-pill').textContent = '+$' + saved.toFixed(calls >= 1 ? 4 : 2);
-      document.getElementById('savings-sub').textContent  = 'Live session · ' + calls + ' calls';
+
+      var savedStr = saved >= 1 ? '$' + saved.toFixed(2) : '$' + saved.toFixed(4);
+      document.getElementById('hero-saved').textContent    = savedStr;
+      document.getElementById('hero-saved-sub').textContent = calls
+        ? (Math.round(saved / (saved + (s.total_cost_usd || 0.001)) * 100) || 98) + '% cheaper than always-frontier'
+        : 'Run demo/live_demo.py to start';
+      document.getElementById('savings-pill').textContent = '+' + savedStr;
+      document.getElementById('savings-sub').textContent  = 'Session · ' + calls + ' calls routed';
 
       savingsSeries.push(saved);
       if (savingsSeries.length > 50) savingsSeries.shift();
       renderSavings();
-
       renderModelBars(s.model_distribution || {}, calls);
     })
     .catch(function() {});
@@ -390,37 +433,33 @@ function fetchStats() {
 function renderSavings() {
   var data = savingsSeries;
   if (data.length < 2) return;
-  var W = 560, H = 180, pL = 48, pR = 12, pT = 12, pB = 26;
+  var W = 560, H = 180, pL = 54, pR = 12, pT = 12, pB = 26;
   var max = Math.max.apply(null, data);
   if (max === 0) max = 0.001;
 
   function xs(i) { return pL + (i / (data.length - 1)) * (W - pL - pR); }
   function ys(v) { return pT + (1 - v / max) * (H - pT - pB); }
 
-  var pts = data.map(function(v, i) { return xs(i).toFixed(1) + ',' + ys(v).toFixed(1); });
-  var linePts = pts.join(' ');
+  var pts  = data.map(function(v, i) { return xs(i).toFixed(1) + ',' + ys(v).toFixed(1); });
   var area = 'M ' + pL + ',' + ys(0).toFixed(1) + ' L ' + pts.join(' L ') + ' L ' + xs(data.length - 1).toFixed(1) + ',' + ys(0).toFixed(1) + ' Z';
-
-  var gridSteps = [0, max * 0.25, max * 0.5, max * 0.75, max];
   var grid = '';
-  gridSteps.forEach(function(v) {
-    var y = ys(v).toFixed(1);
+  [0, max * 0.5, max].forEach(function(v) {
+    var y   = ys(v).toFixed(1);
     var lbl = v < 0.01 ? '$' + v.toFixed(5) : '$' + v.toFixed(v < 1 ? 3 : 2);
     grid += '<line x1="' + pL + '" x2="' + (W - pR) + '" y1="' + y + '" y2="' + y + '" stroke="var(--hair)" stroke-dasharray="2 3"/>';
     grid += '<text x="' + (pL - 6) + '" y="' + (parseFloat(y) + 3) + '" font-size="10" fill="var(--muted)" text-anchor="end" font-family="JetBrains Mono,monospace">' + lbl + '</text>';
   });
-
   var endX = xs(data.length - 1).toFixed(1);
   var endY = ys(data[data.length - 1]).toFixed(1);
 
   document.getElementById('savings-svg').innerHTML =
-    '<defs><linearGradient id="sg" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#1c4a8a" stop-opacity="0.22"/><stop offset="100%" stop-color="#1c4a8a" stop-opacity="0"/></linearGradient></defs>' +
+    '<defs><linearGradient id="sg" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#2f6b3a" stop-opacity="0.25"/><stop offset="100%" stop-color="#2f6b3a" stop-opacity="0"/></linearGradient></defs>' +
     grid +
     '<text x="' + pL + '" y="' + (H - 8) + '" font-size="10" fill="var(--muted)" font-family="JetBrains Mono,monospace">start</text>' +
     '<text x="' + (W - pR) + '" y="' + (H - 8) + '" font-size="10" fill="var(--muted)" text-anchor="end" font-family="JetBrains Mono,monospace">now</text>' +
     '<path d="' + area + '" fill="url(#sg)"/>' +
-    '<polyline points="' + linePts + '" fill="none" stroke="#1c4a8a" stroke-width="2"/>' +
-    '<circle cx="' + endX + '" cy="' + endY + '" r="4" fill="white" stroke="#1c4a8a" stroke-width="2"/>';
+    '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--good)" stroke-width="2.5"/>' +
+    '<circle cx="' + endX + '" cy="' + endY + '" r="5" fill="white" stroke="var(--good)" stroke-width="2.5"/>';
 }
 
 function renderModelBars(dist, totalCalls) {
@@ -438,51 +477,55 @@ function renderModelBars(dist, totalCalls) {
     var color = mcolor(short);
     html += '<div class="model-bar-row">';
     html += '<div class="model-bar-head">';
-    html += '<span style="display:flex;align-items:center;gap:8px"><span class="dot" style="width:8px;height:8px;background:' + color + '"></span><span style="color:var(--ink-2);font-weight:500">' + short + '</span></span>';
-    html += '<span style="font-family:JetBrains Mono,monospace;color:var(--muted);font-size:12px">' + pct + '%</span>';
+    html += '<span style="display:flex;align-items:center;gap:8px"><span class="dot" style="width:8px;height:8px;background:' + color + '"></span><span style="color:var(--ink-2);font-weight:500;font-family:JetBrains Mono,monospace;font-size:12px">' + short + '</span></span>';
+    html += '<span style="font-family:JetBrains Mono,monospace;color:var(--muted);font-size:12px">' + pct + '%  (' + count + ' calls)</span>';
     html += '</div>';
     html += '<div class="model-bar-track"><div class="model-bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>';
     html += '</div>';
   });
   document.getElementById('model-bars').innerHTML = html;
 
-  var top = entries[0];
+  var top     = entries[0];
+  var topPct  = Math.round(top[1] / total * 100);
   var topShort = top[0].split('/').pop();
-  var topPct = Math.round(top[1] / total * 100);
-  if (topPct > 50) {
+  if (topPct > 40) {
     document.getElementById('model-foot').textContent =
-      topPct + '% of calls handled by the cheapest tier. Frontier reserved for the ' + (100 - topPct) + '% that need it.';
+      topPct + '% of calls handled by cheapest tier (' + topShort + '). '
+      + 'Frontier invoked for only ' + (100 - topPct) + '% of calls.';
   }
 }
 
-// ── Audit ───────────────────────────────────────────────
+// ── Audit ─────────────────────────────────────────────────────────────────────
 function fetchAudit() {
   fetch('http://localhost:8000/audit/all?limit=10')
     .then(function(r) { return r.json(); })
     .then(function(d) {
       var records = d.records || [];
       if (!records.length) return;
-
-      renderAuditTable(records);
-      renderHeroFromRecord(records[0]);
+      var isNew = lastRecordId !== null && records[0].record_id !== lastRecordId;
+      lastRecordId = records[0].record_id;
+      if (records[0].org) lastOrg = records[0].org;
+      renderAuditTable(records, isNew);
+      renderHeroFromRecord(records[0], isNew);
       renderMultiChart(records);
     })
     .catch(function() {});
 }
 
-function renderAuditTable(records) {
+function renderAuditTable(records, isNew) {
   var rows = '';
-  records.forEach(function(r) {
+  records.forEach(function(r, idx) {
     var short  = r.model_used.split('/').pop();
     var color  = mcolor(short);
-    var qColor = r.quality_score >= 0.7 ? 'var(--good)' : 'var(--warn)';
-    rows += '<tr>';
+    var qColor = r.quality_score >= 0.7 ? 'var(--good)' : r.quality_score >= 0.5 ? 'var(--warn)' : 'var(--brand)';
+    var flash  = (idx === 0 && isNew) ? ' class="flash-new"' : '';
+    rows += '<tr' + flash + '>';
     rows += '<td class="mono">' + r.record_id + '</td>';
     rows += '<td style="text-transform:capitalize">' + r.task_type + '</td>';
     rows += '<td><span style="display:inline-flex;align-items:center;gap:6px"><span class="dot" style="width:6px;height:6px;background:' + color + '"></span><span style="font-family:JetBrains Mono,monospace;font-size:12px">' + short + '</span></span></td>';
-    rows += '<td class="mono" style="color:' + qColor + '">' + r.quality_score.toFixed(2) + '</td>';
+    rows += '<td class="mono" style="color:' + qColor + ';font-weight:600">' + r.quality_score.toFixed(2) + '</td>';
     rows += '<td class="mono">$' + r.cost_usd.toFixed(6) + '</td>';
-    rows += '<td class="td-good">$' + r.cost_saved_usd.toFixed(6) + '</td>';
+    rows += '<td class="td-good">↓ $' + r.cost_saved_usd.toFixed(6) + '</td>';
     rows += '<td class="mono">' + r.latency_ms.toFixed(0) + 'ms</td>';
     rows += '<td class="td-muted">' + r.record_hash.slice(0, 14) + '…</td>';
     rows += '</tr>';
@@ -490,66 +533,66 @@ function renderAuditTable(records) {
   document.getElementById('audit-body').innerHTML = rows;
 }
 
-function renderHeroFromRecord(r) {
-  var short      = r.model_used.split('/').pop();
-  var color      = mcolor(short);
-  var passed     = r.quality_score >= r.quality_score; // always true; use threshold if available
-  var gm         = r.goal_match || {};
-  var ts         = new Date(r.timestamp * 1000);
-  var timeStr    = ts.toLocaleTimeString('en-US', { hour12: false });
-  var scores     = r.linucb_scores || [];
-
-  // Subtitle
-  document.getElementById('hero-sub').textContent =
-    'Call ' + r.record_id + ' · ' + r.task_type + ' · complexity — · ' + timeStr;
-
-  // Rationale box
+function renderHeroFromRecord(r, isNew) {
+  var short   = r.model_used.split('/').pop();
+  var color   = mcolor(short);
+  var gm      = r.goal_match || {};
+  var ts      = new Date(r.timestamp * 1000);
+  var timeStr = ts.toLocaleTimeString('en-US', { hour12: false });
   var saved   = r.cost_saved_usd;
   var savePct = r.frontier_cost_usd > 0 ? Math.round(saved / r.frontier_cost_usd * 100) : 0;
+
+  document.getElementById('hero-sub').textContent =
+    'Call ' + r.record_id + ' · ' + r.task_type + ' · ' + timeStr;
+
   var html = '';
 
+  // Plain-English summary — the most important thing for room
   html += '<div class="rationale">';
-  html += '<div class="rationale-label">Decision rationale</div>';
-  html += '<div class="rationale-text">Routed to <b style="background:#f2dc6a;padding:1px 4px;border-radius:3px">' + short + '</b>';
-  html += ' because the classifier identified this as a <b>' + r.task_type + '</b> task.';
-  html += ' X25 picked the ' + r.selected_tier.toUpperCase() + ' tier and the judge ';
-  html += '<span style="color:var(--good);font-weight:600">passed</span>';
-  html += ' at q=' + r.quality_score.toFixed(2) + ', saving <b>' + savePct + '%</b> vs frontier.</div>';
+  html += '<div class="rationale-label">Plain English</div>';
+  html += '<div class="rationale-text">';
+  html += 'X25 saw a <b>' + r.task_type + '</b> task and picked ';
+  html += '<b style="background:#f2dc6a;padding:1px 5px;border-radius:3px">' + short + '</b> ';
+  html += '(' + r.selected_tier.toUpperCase() + ' tier). ';
+  html += 'Quality score <b>' + r.quality_score.toFixed(2) + '</b> — passed. ';
+  html += 'You paid <b style="color:var(--good)">$' + r.cost_usd.toFixed(6) + '</b> instead of ';
+  html += '<span style="text-decoration:line-through;color:var(--muted)">$' + r.frontier_cost_usd.toFixed(6) + '</span>. ';
+  html += 'Saved <b style="color:var(--good)">' + savePct + '%</b>.';
+  html += '</div>';
   html += '<div class="rationale-meta">';
-  html += '<span>Judge <span style="color:var(--good);font-weight:600">passed</span> at q=' + r.quality_score.toFixed(2) + '</span>';
-  html += '<span>Saved <b style="color:var(--good)">$' + saved.toFixed(6) + '</b> vs frontier</span>';
-  if (gm.overall_reward !== undefined) html += '<span>Reward ' + gm.overall_reward.toFixed(3) + '</span>';
+  html += '<span>Cascade steps: ' + r.cascade_steps + '</span>';
+  html += '<span>Latency: ' + r.latency_ms.toFixed(0) + 'ms</span>';
+  if (gm.overall_reward !== undefined) html += '<span>Reward: ' + gm.overall_reward.toFixed(3) + '</span>';
   html += '</div></div>';
 
-  // Candidate score bars (LinUCB scores)
-  var tierNames = ['GPT-4o Mini (SLM)', 'Claude Haiku 4.5 (mid)', 'Claude Sonnet 4.6 (frontier)'];
-  var tierColors = ['#1c4a8a', '#2f6b3a', '#b07a14'];
+  // Thompson Sampling arm scores
+  var tiers = ['SLM', 'Mid', 'Frontier'];
+  var tierColors = ['#1c4a8a', '#b07a14', '#b6321c'];
+  var scores = r.linucb_scores || [];
   if (scores.length) {
     var maxScore = Math.max.apply(null, scores.map(function(s) { return Math.max(s, 0); })) || 1;
-    html += '<div style="font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:8px">Candidates considered</div>';
+    html += '<div style="font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:8px">All tiers considered</div>';
     html += '<div class="cand-table">';
-    html += '<div class="cand-head"><div>Model</div><div>LinUCB Score</div><div>Status</div></div>';
+    html += '<div class="cand-head"><div>Tier</div><div>Sample score</div><div>Result</div></div>';
     var selectedIdx = ['slm', 'mid', 'frontier'].indexOf(r.selected_tier);
     scores.forEach(function(score, i) {
       var isPicked = i === selectedIdx;
       var pct = Math.min(100, Math.max(0, score < 0 ? 0 : score / maxScore * 100)).toFixed(0);
-      var barColor = isPicked ? 'var(--brand)' : 'var(--muted)';
-      var scoreColor = isPicked ? 'var(--brand-2)' : 'var(--ink-2)';
       html += '<div class="cand-row' + (isPicked ? ' picked' : '') + '">';
-      html += '<div><div style="display:flex;align-items:center;gap:8px"><span class="dot" style="width:6px;height:6px;background:' + tierColors[i] + '"></span>';
-      html += '<span class="cand-name' + (isPicked ? ' bold' : '') + '">' + (tierNames[i] || 'Tier ' + i) + '</span></div></div>';
-      html += '<div class="sbar"><div class="sbar-track"><div class="sbar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div>';
-      html += '<span class="sbar-val" style="color:' + scoreColor + '">' + score.toFixed(3) + '</span></div>';
-      html += '<div style="text-align:right">' + (isPicked ? '<span class="pill pill-b">Selected</span>' : '<span class="pill pill-n">Reserve</span>') + '</div>';
+      html += '<div><span style="display:inline-flex;align-items:center;gap:8px"><span class="dot" style="width:6px;height:6px;background:' + tierColors[i] + '"></span>';
+      html += '<span class="cand-name' + (isPicked ? ' bold' : '') + '">' + tiers[i] + '</span></span></div>';
+      html += '<div class="sbar"><div class="sbar-track"><div class="sbar-fill" style="width:' + pct + '%;background:' + (isPicked ? 'var(--brand)' : 'var(--muted)') + '"></div></div>';
+      html += '<span class="sbar-val" style="color:' + (isPicked ? 'var(--brand-2)' : 'var(--ink-2)') + '">' + score.toFixed(3) + '</span></div>';
+      html += '<div style="text-align:right">' + (isPicked ? '<span class="pill pill-b">Chosen</span>' : '<span class="pill pill-n">Skipped</span>') + '</div>';
       html += '</div>';
     });
     html += '</div>';
   }
 
-  // Judge row
+  // Judge verdict
   html += '<div class="judge-row pass">';
   html += '<span class="pill pill-g"><span class="dot" style="width:6px;height:6px;background:var(--good)"></span>Judge passed</span>';
-  html += '<div class="judge-note">q <b>' + r.quality_score.toFixed(2) + '</b> passed threshold · ' + r.cascade_steps + ' cascade step' + (r.cascade_steps !== 1 ? 's' : '') + '</div>';
+  html += '<div class="judge-note">Quality <b>' + r.quality_score.toFixed(2) + '</b> ≥ threshold — answer accepted · ' + r.cascade_steps + ' cascade step' + (r.cascade_steps !== 1 ? 's' : '') + '</div>';
   html += '</div>';
 
   document.getElementById('hero-body').innerHTML = html;
@@ -557,12 +600,12 @@ function renderHeroFromRecord(r) {
   // Outcome panel
   var out = '';
   out += '<div style="display:flex;align-items:baseline;gap:8px">';
-  out += '<div class="outcome-big">$' + saved.toFixed(saved >= 0.01 ? 4 : 6) + '</div>';
-  out += '<span style="font-size:12px;color:var(--muted)">saved · ' + savePct + '%</span>';
+  out += '<div class="outcome-big">$' + saved.toFixed(saved >= 0.01 ? 4 : 6) + ' saved</div>';
   out += '</div>';
+  out += '<div style="font-size:13px;color:var(--muted);margin-top:4px">' + savePct + '% cheaper than frontier</div>';
   out += '<div class="outcome-grid">';
-  out += '<div class="outcome-box"><div class="ob-label">X25 path</div><div class="ob-value">$' + r.cost_usd.toFixed(6) + '</div><div class="ob-sub">' + r.cascade_steps + ' attempt · ' + r.latency_ms.toFixed(0) + 'ms</div></div>';
-  out += '<div class="outcome-box"><div class="ob-label">Frontier path</div><div class="ob-value" style="text-decoration:line-through;color:var(--muted)">$' + r.frontier_cost_usd.toFixed(6) + '</div><div class="ob-sub">claude-sonnet-4-6</div></div>';
+  out += '<div class="outcome-box"><div class="ob-label">X25 paid</div><div class="ob-value" style="color:var(--good)">$' + r.cost_usd.toFixed(6) + '</div><div class="ob-sub">' + short + ' · ' + r.latency_ms.toFixed(0) + 'ms</div></div>';
+  out += '<div class="outcome-box"><div class="ob-label">Frontier would cost</div><div class="ob-value" style="text-decoration:line-through;color:var(--muted)">$' + r.frontier_cost_usd.toFixed(6) + '</div><div class="ob-sub">avoided</div></div>';
   out += '</div>';
 
   if (gm.cost !== undefined) {
@@ -572,99 +615,137 @@ function renderHeroFromRecord(r) {
     goalRows.forEach(function(row) {
       var label = row[0], tgt = row[1], act = row[2];
       var delta = act - tgt;
-      var ok = Math.abs(delta) < 0.05;
-      var dColor = ok ? 'var(--good)' : 'var(--warn)';
-      var dStr = (delta >= 0 ? '+' : '') + delta.toFixed(2);
-      out += '<div><div class="goal-row-head">';
-      out += '<span style="color:var(--ink-2)">' + label + '</span>';
-      out += '<span style="font-family:JetBrains Mono,monospace;color:' + dColor + '">' + dStr + '</span>';
-      out += '</div><div class="goal-track">';
-      out += '<div class="goal-fill" style="width:' + (act * 100).toFixed(1) + '%"></div>';
-      out += '<div class="goal-marker" style="left:' + (tgt * 100).toFixed(1) + '%"></div>';
-      out += '</div></div>';
+      var dColor = Math.abs(delta) < 0.05 ? 'var(--good)' : 'var(--warn)';
+      out += '<div><div class="goal-row-head"><span style="color:var(--ink-2)">' + label + '</span>';
+      out += '<span style="font-family:JetBrains Mono,monospace;color:' + dColor + '">' + (delta >= 0 ? '+' : '') + delta.toFixed(2) + '</span></div>';
+      out += '<div class="goal-track"><div class="goal-fill" style="width:' + (act * 100).toFixed(1) + '%"></div>';
+      out += '<div class="goal-marker" style="left:' + (tgt * 100).toFixed(1) + '%"></div></div></div>';
     });
-    out += '</div>';
-    out += '<div class="goal-legend">';
-    out += '<span><span style="display:inline-block;width:8px;height:2px;background:var(--ink);vertical-align:middle;margin-right:4px"></span>target</span>';
-    out += '<span><span style="display:inline-block;width:8px;height:4px;background:var(--brand);vertical-align:middle;margin-right:4px"></span>achieved</span>';
-    out += '</div></div>';
+    out += '</div><div class="goal-legend"><span><span style="display:inline-block;width:8px;height:2px;background:var(--ink);vertical-align:middle;margin-right:4px"></span>target</span>';
+    out += '<span><span style="display:inline-block;width:8px;height:4px;background:var(--brand);vertical-align:middle;margin-right:4px"></span>achieved</span></div></div>';
   }
 
   document.getElementById('outcome-body').innerHTML = out;
 }
 
-// ── Multi-variable performance chart ───────────────────
+// ── Multi-variable chart ──────────────────────────────────────────────────────
 function renderMultiChart(records) {
   if (!records || records.length < 2) return;
-  var data = records.slice().reverse(); // oldest first
+  var data = records.slice().reverse();
   var W = 1180, H = 160, pL = 44, pR = 12, pT = 12, pB = 26;
   var n = data.length;
 
   function xs(i) { return pL + (i / (n - 1)) * (W - pL - pR); }
   function ys(v) { return pT + (1 - Math.min(1, Math.max(0, v))) * (H - pT - pB); }
 
-  // Extract three series
-  var quality  = data.map(function(r) { return r.quality_score; });
-  var costEff  = data.map(function(r) {
+  var quality = data.map(function(r) { return r.quality_score; });
+  var costEff = data.map(function(r) {
     return r.frontier_cost_usd > 0 ? Math.min(1, (r.frontier_cost_usd - r.cost_usd) / r.frontier_cost_usd) : 0;
   });
-  var latEff   = data.map(function(r) { return Math.max(0, 1 - r.latency_ms / 10000); });
+  var latEff  = data.map(function(r) { return Math.max(0, 1 - r.latency_ms / 10000); });
 
   function polyline(series, color, dasharray) {
     var pts = series.map(function(v, i) { return xs(i).toFixed(1) + ',' + ys(v).toFixed(1); }).join(' ');
     return '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2"' + (dasharray ? ' stroke-dasharray="' + dasharray + '"' : '') + ' stroke-linejoin="round" stroke-linecap="round"/>';
   }
-
   function dots(series, color) {
     return series.map(function(v, i) {
       return '<circle cx="' + xs(i).toFixed(1) + '" cy="' + ys(v).toFixed(1) + '" r="3" fill="white" stroke="' + color + '" stroke-width="1.5"/>';
     }).join('');
   }
 
-  // Grid lines at 0, 0.25, 0.5, 0.75, 1
   var grid = '';
   [0, 0.25, 0.5, 0.75, 1].forEach(function(v) {
     var y = ys(v).toFixed(1);
     grid += '<line x1="' + pL + '" x2="' + (W - pR) + '" y1="' + y + '" y2="' + y + '" stroke="var(--hair)" stroke-dasharray="2 3"/>';
     grid += '<text x="' + (pL - 6) + '" y="' + (parseFloat(y) + 3) + '" font-size="10" fill="var(--muted)" text-anchor="end" font-family="JetBrains Mono,monospace">' + v.toFixed(2) + '</text>';
   });
-
-  // X-axis call labels (sparse)
   var xLabels = '';
   data.forEach(function(r, i) {
     if (n <= 10 || i % Math.ceil(n / 8) === 0 || i === n - 1) {
-      var callNum = r.record_id ? r.record_id.split('-')[0].slice(-4) : (i + 1);
       xLabels += '<text x="' + xs(i).toFixed(1) + '" y="' + (H - 8) + '" font-size="9" fill="var(--muted)" text-anchor="middle" font-family="JetBrains Mono,monospace">' + (i + 1) + '</text>';
     }
   });
 
-  var svg = grid + xLabels +
-    polyline(costEff,  '#1c4a8a', '4 2') +
-    polyline(latEff,   '#b07a14', '4 2') +
-    polyline(quality,  '#2f6b3a') +
+  document.getElementById('multi-svg').innerHTML =
+    grid + xLabels +
+    polyline(costEff, '#1c4a8a', '4 2') +
+    polyline(latEff,  '#b07a14', '4 2') +
+    polyline(quality, '#2f6b3a') +
     dots(quality, '#2f6b3a');
-
-  document.getElementById('multi-svg').innerHTML = svg;
 }
 
-// ── Verify chain ────────────────────────────────────────
+// ── Thompson state ────────────────────────────────────────────────────────────
+function fetchThompson() {
+  var org = lastOrg || 'default';
+  fetch('http://localhost:8000/thompson/' + org)
+    .then(function(r) { return r.json(); })
+    .then(function(d) { if (d && d.arms) renderThompson(d.arms, d.org); })
+    .catch(function() {});
+}
+
+function renderThompson(arms, org) {
+  if (!arms || !arms.length) return;
+
+  var totalObs = arms.reduce(function(s, a) { return s + (a.total_obs || 0); }, 0);
+  document.getElementById('ts-obs-pill').textContent = totalObs + ' observations · ' + (org || 'org');
+
+  var tierLabels  = { slm: 'SLM', mid: 'Mid', frontier: 'Frontier' };
+  var tierColors  = { slm: '#1c4a8a', mid: '#b07a14', frontier: '#b6321c' };
+  var tierDescs   = {
+    slm:      'Cheapest — DeepSeek, Qwen class',
+    mid:      'Balanced — strong general models',
+    frontier: 'Best quality — Claude, GPT-4o class'
+  };
+
+  // Pick the arm with highest mean as "currently preferred"
+  var bestMean = Math.max.apply(null, arms.map(function(a) { return a.mean_reward || 0; }));
+
+  var html = '';
+  arms.forEach(function(arm) {
+    var tier    = arm.tier || 'slm';
+    var color   = tierColors[tier] || '#6b6354';
+    var mean    = (arm.mean_reward || 0);
+    var conf    = (arm.confidence  || 0);
+    var unc     = (arm.uncertainty || 0);
+    var obs     = (arm.total_obs   || 0);
+    var alpha   = (arm.alpha || 1).toFixed(1);
+    var beta    = (arm.beta  || 1).toFixed(1);
+    var isTop   = Math.abs(mean - bestMean) < 0.001 && obs > 0;
+
+    html += '<div class="ts-arm' + (isTop ? ' active' : '') + '">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+    html += '<div><div class="ts-tier" style="color:' + color + '">' + (tierLabels[tier] || tier) + '</div>';
+    html += '<div class="ts-model">' + tierDescs[tier] + '</div></div>';
+    if (isTop) html += '<span class="pill pill-b" style="font-size:10px">Preferred</span>';
+    html += '</div>';
+    html += '<div class="ts-reward" style="color:' + color + '">' + (mean * 100).toFixed(0) + '%</div>';
+    html += '<div style="font-size:11px;color:var(--muted);margin-top:2px">mean reward</div>';
+    html += '<div class="ts-conf-bar"><div class="ts-conf-fill" style="width:' + (conf * 100).toFixed(1) + '%;background:' + color + '"></div></div>';
+    html += '<div class="ts-label">Confidence: ' + (conf * 100).toFixed(0) + '% · ' + obs + ' observations</div>';
+    html += '<div class="ts-stats">';
+    html += '<span>α=' + alpha + '</span>';
+    html += '<span>β=' + beta + '</span>';
+    html += '<span>uncertainty=' + unc.toFixed(3) + '</span>';
+    html += '</div>';
+    html += '</div>';
+  });
+  document.getElementById('ts-grid').innerHTML = html;
+}
+
+// ── Verify chain ──────────────────────────────────────────────────────────────
 function fetchVerify() {
   fetch('http://localhost:8000/verify')
     .then(function(r) { return r.json(); })
     .then(function(v) {
       var el = document.getElementById('chain-pill');
-      if (v.intact) {
-        el.className = 'pill pill-g';
-        el.innerHTML = '<span class="dot" style="width:6px;height:6px;background:var(--good)"></span>&nbsp;Chain intact';
-      } else {
-        el.className = 'pill pill-r';
-        el.innerHTML = '<span class="dot" style="width:6px;height:6px;background:var(--brand)"></span>&nbsp;Chain broken: ' + v.message;
-      }
+      el.className = v.intact ? 'pill pill-g' : 'pill pill-r';
+      el.innerHTML = '<span class="dot" style="width:6px;height:6px;background:' + (v.intact ? 'var(--good)' : 'var(--brand)') + '"></span>&nbsp;' + (v.intact ? 'Chain intact' : 'Chain broken: ' + v.message);
     })
     .catch(function() {});
 }
 
-// ── Stage ───────────────────────────────────────────────
+// ── Stage ─────────────────────────────────────────────────────────────────────
 function fetchStage() {
   fetch('http://localhost:8000/stage/all')
     .then(function(r) { return r.json(); })
@@ -673,22 +754,22 @@ function fetchStage() {
 }
 
 function renderStage(s) {
-  var banner = document.getElementById('stage-banner');
   if (!s || !s.stage) return;
+  var banner = document.getElementById('stage-banner');
   banner.style.display = 'block';
 
   var colors = { 1: 'var(--muted)', 2: 'var(--blue)', 3: 'var(--warn)', 4: 'var(--good)' };
   var color  = colors[s.stage] || 'var(--brand)';
 
-  document.getElementById('stage-badge').textContent        = s.stage;
-  document.getElementById('stage-badge').style.background   = color;
-  document.getElementById('stage-title').textContent        = 'Stage ' + s.stage + ' — ' + s.stage_name;
-  document.getElementById('stage-desc').textContent         = s.stage_description;
-  document.getElementById('stage-progress-bar').style.width = (s.progress_in_stage * 100).toFixed(1) + '%';
+  document.getElementById('stage-badge').textContent         = s.stage;
+  document.getElementById('stage-badge').style.background    = color;
+  document.getElementById('stage-title').textContent         = 'Stage ' + s.stage + ' — ' + s.stage_name;
+  document.getElementById('stage-desc').textContent          = s.stage_description;
+  document.getElementById('stage-progress-bar').style.width  = (s.progress_in_stage * 100).toFixed(1) + '%';
   document.getElementById('stage-progress-bar').style.background = color;
 
   if (s.calls_to_next_stage > 0) {
-    document.getElementById('stage-next-label').textContent = 'calls to Stage ' + s.next_stage;
+    document.getElementById('stage-next-label').textContent = 'calls to Stage ' + s.next_stage + ' (' + s.next_stage_name + ')';
     document.getElementById('stage-next-val').textContent   = s.calls_to_next_stage + ' calls';
     document.getElementById('stage-next-val').style.color   = color;
   } else {
@@ -696,10 +777,9 @@ function renderStage(s) {
     document.getElementById('stage-next-val').textContent   = 'Fine-tune ready';
   }
 
-  // Stage step dots
   var steps = '';
   s.all_stages.forEach(function(st) {
-    var bg = st.active ? color : (st.unlocked ? color : 'var(--hair)');
+    var bg      = st.active ? color : (st.unlocked ? color : 'var(--hair)');
     var opacity = st.unlocked ? '1' : '0.35';
     steps += '<div style="display:flex;align-items:center;gap:4px;opacity:' + opacity + '">';
     steps += '<span class="dot" style="width:8px;height:8px;background:' + bg + '"></span>';
@@ -709,22 +789,21 @@ function renderStage(s) {
   });
   document.getElementById('stage-steps').innerHTML = steps;
 
-  // Drift alert
-  if (s.drift_detected) {
-    document.getElementById('stage-drift-alert').style.display = 'block';
-  }
+  if (s.drift_detected) document.getElementById('stage-drift-alert').style.display = 'block';
 }
 
-// ── Boot ────────────────────────────────────────────────
+// ── Boot ──────────────────────────────────────────────────────────────────────
 connect();
 fetchStats();
 fetchAudit();
 fetchVerify();
 fetchStage();
-setInterval(fetchStats,  5000);
-setInterval(fetchAudit,  8000);
-setInterval(fetchVerify, 15000);
-setInterval(fetchStage,  10000);
+fetchThompson();
+setInterval(fetchStats,    5000);
+setInterval(fetchAudit,    8000);
+setInterval(fetchVerify,  15000);
+setInterval(fetchStage,   10000);
+setInterval(fetchThompson, 8000);
 </script>
 </body>
 </html>
